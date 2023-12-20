@@ -103,6 +103,22 @@ class Conjunction(Module):
         self.send(Signal.LOW if out else Signal.HIGH)
 
 
+class Dummy(Module):
+    # Does nothing, but remembers its inputs.
+
+    inc_counter: dict[Signal: int]
+
+    def __init__(self, name: str):
+        super().__init__(name)
+        self.reset_counter()
+
+    def process(self, sender, signal):
+        self.inc_counter[signal] += 1
+
+    def reset_counter(self):
+        self.inc_counter = {Signal.LOW: 0, Signal.HIGH: 0}
+
+
 pattern = r"^(?P<type>[\%\&]|broadcaster)(?P<id>\w*)\s*->\s*(?P<output>(?:\w*(?:,\s+|$))*)"
 
 
@@ -149,7 +165,7 @@ def create_state_machine():
         for subscriber in module.subscribers:
             # Modules that were referenced but not declared can be added as dummies here.
             if subscriber not in modules:
-                Module(subscriber)
+                Dummy(subscriber)
 
             # Add to conjunctions
             if isinstance(modules[subscriber], Conjunction):
@@ -170,22 +186,41 @@ def press_button(button):
         module.process(sender, signal)
 
 
-verbose = True
+verbose = False
 b = create_state_machine()
 
-for _ in range(1000):
-    press_button(b)
-    print("\n")
+
+def puzzle_1():
+    # Press the button 1000 times and figure out how many signals are sent.
+    for _ in range(1000):
+        press_button(b)
+
+    def final_count():
+        high, low = 0, 0
+        for m in modules.values():
+            high += m.counter[Signal.HIGH]
+            low += m.counter[Signal.LOW]
+
+        print(f"\n\nFinal counts: {low} low, {high} high.")
+        print(f"Product: {high * low}")
+
+    final_count()
 
 
-def final_count():
-    high, low = 0, 0
-    for m in modules.values():
-        high += m.counter[Signal.HIGH]
-        low += m.counter[Signal.LOW]
+def puzzle_2():
+    # Figure out how many button presses it takes for `rx` to receive a low pulse.
 
-    print(f"Final counts: {low} low, {high} high.")
-    print(f"Product: {high * low}")
+    i = 1
+    while True:
+        print(f"\nPress #{i}.")
+        press_button(b)
+        lows = modules['rx'].inc_counter[Signal.LOW]
+        highs = modules['rx'].inc_counter[Signal.HIGH]
+        print(f"Received {lows} lows and {highs} highs.")
+        if lows == 1:
+            break
+        i += 1
+        modules['rx'].reset_counter()
 
 
-final_count()
+puzzle_2()
