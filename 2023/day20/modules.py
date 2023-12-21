@@ -22,7 +22,6 @@ class Module:
     id: str
     subscribers: list[str]
     counter: dict[Signal: int]
-    history: list[bool]
 
     def __init__(self, name: str):
         self.id = name
@@ -30,8 +29,10 @@ class Module:
             raise ValueError(f"Duplicate module: {name}")
         modules[name] = self
         self.subscribers = []
+        self.reset_counter()
+
+    def reset_counter(self):
         self.counter = {Signal.LOW: 0, Signal.HIGH: 0}
-        self.history = []
 
     def process(self, sender, signal):
         # Receives a signal, processes internal state (including count), and sends any outgoing signals.
@@ -44,9 +45,6 @@ class Module:
             processing_queue.append((modules[module], self.id, signal))
             if verbose:
                 print(f"{self.id} -{'high' if signal == Signal.HIGH else 'low'}-> {module}")
-
-            # Record every single signal this module has sent.
-        self.history.append(signal.value)
 
     def count(self):
         # Returns the number of low and high pulses sent by this module
@@ -191,71 +189,6 @@ def press_button(button):
         module.process(sender, signal)
 
 
-def puzzle_1():
-    # Press the button 1000 times and figure out how many signals are sent.
-    for _ in range(1000):
-        press_button(b)
-
-    def final_count():
-        high, low = 0, 0
-        for m in modules.values():
-            high += m.counter[Signal.HIGH]
-            low += m.counter[Signal.LOW]
-
-        print(f"\n\nFinal counts: {low} low, {high} high.")
-        print(f"Product: {high * low}")
-
-    final_count()
-
-
-def puzzle_2_brute_force():
-    # Figure out how many button presses it takes for `rx` to receive a low pulse.
-
-    i = 1
-    while True:
-        print(f"\nPress #{i}.")
-        press_button(b)
-        lows = modules['rx'].inc_counter[Signal.LOW]
-        highs = modules['rx'].inc_counter[Signal.HIGH]
-        print(f"Received {lows} lows and {highs} highs.")
-        if lows == 1:
-            break
-        i += 1
-        modules['rx'].reset_counter()
-
-
-def find_repetition(seq):
-    # Tries to find a repeated pattern in a list of signals
-    for period in range(1, len(seq) // 2 + 1):
-        fail = False
-        for i in range(0, len(seq), period):
-
-            if seq[0:period] != seq[i:period + i]:
-                fail = True
-                break
-
-        if not fail:
-            return period
-
-    return None
-
-
-def find_patterns():
-    for i in range(150000):
-        if i % 1000 == 0:
-            print(f"Press {i}")
-        press_button(b)
-
-    print("\n\nFinding patterns...")
-    for module in modules.values():
-        r = find_repetition(module.history)
-        if r is not None:
-            print(f"Module {module.id} repeats after {r} button presses.")
-        else:
-            print(f"Module {module.id} does not repeat ({len(module.history)} total signals.)")
-
-
 verbose = False
-b = create_state_machine()
-find_patterns()
-# puzzle_2_brute_force()
+
+
