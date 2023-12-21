@@ -13,7 +13,7 @@ def plot_graph():
     for i, mod in enumerate(modules.values()):
         edges += [(i, next(v for v, name in enumerate(vertices) if name == s)) for s in mod.subscribers]
 
-    g = ig.Graph(len(modules), edges)
+    g = ig.Graph(len(modules), edges, directed=True)
     g.vs["name"] = vertices
     for v in g.vs:
         match type(modules[v["name"]]).__name__:
@@ -29,21 +29,23 @@ def plot_graph():
     ig.plot(
         g,
         target=ax,
-        layout="kamada_kawai",
+        layout="graphopt",
         vertex_size=30,
         vertex_color=g.vs["color"],
-        vertex_frame_width=4.0,
-        vertex_frame_color="white",
+        vertex_frame_width=0.5,
+        vertex_frame_color="black",
         vertex_label=g.vs["name"],
         vertex_label_size=7.0,
         edge_width=1,
         edge_color="#AAA",
+        edge_arrow_size=6,
+        edge_arrow_width=6
     )
 
     plt.show()
 
 
-# plot_graph()
+plot_graph()
 
 # From this graph we can see that only 4 conjunction modules feed into rx.
 # Each of these modules has its own subgraph controlling it.
