@@ -17,11 +17,14 @@ class Garden:
     grid: np.ndarray  # The main grid. Coordinates are (y, x).
 
     def __copy__(self):
-        c = Garden()
+        c = Garden(None)
         c.grid = self.grid.__copy__()
         return c
 
-    def __init__(self, lines: Iterable[str]):
+    def __init__(self, lines: Iterable[str] | None):
+        if lines is None:
+            return
+
         if isinstance(lines, np.ndarray):
             self.grid = lines
             return
@@ -37,6 +40,9 @@ class Garden:
     def __str__(self):
         return '\n'.join(row.tobytes().decode('utf-8') for row in self.grid)
 
+    def size(self):
+        return len(self.grid)
+
     def in_bounds(self, y, x):
 
         if y < 0:
@@ -49,6 +55,15 @@ class Garden:
             return False
 
         return True
+
+    def move_start(self, y, x) -> Garden:
+        if not self.in_bounds(y, x):
+            raise ValueError()
+
+        g = self.__copy__()
+        g.grid[np.where(g.grid == ord('S'))[0]] = ord('.')
+        g.grid[(y, x)] = ord('S')
+        return g
 
     def step(self) -> Garden:
         # Returns the garden after taking a step
