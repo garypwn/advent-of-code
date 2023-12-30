@@ -1,3 +1,6 @@
+# Input files from advent of code should be named "input.txt"
+**/input.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
