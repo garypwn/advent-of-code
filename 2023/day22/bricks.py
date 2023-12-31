@@ -9,17 +9,20 @@ class Brick:
 
     ends: list[list[int, int, int], tuple[int, int, int]]  # Ends of the brick in x,y,z order
     supported: bool  # Set if there is ground, or a tower of bricks touching the ground, below this brick.
-    supporting: list[Brick]
-    supporters: list[Brick]
+    supporting: set[Brick]
+    supporters: set[Brick]
 
     def __init__(self, p1: list[int, int, int], p2: list[int, int, int]):
         self.ends = [p1, p2]
-        self.supporting = []
-        self.supporters = []
+        self.supporting = set()
+        self.supporters = set()
         self.supported = self.on_ground()
 
     def __hash__(self):
         return hash(tuple(self.ends[0] + self.ends[1]))
+
+    def __str__(self):
+        return f"{self.ends[0]}~{self.ends[1]}"
 
     def on_ground(self):
         return True if self.ends[0][2] == 1 or self.ends[1][2] == 1 else False
@@ -140,8 +143,8 @@ class FallingBricks:
                         self.unsupported_bricks.remove(brick)
                         bisect.insort(self.supported_bricks, brick, key=lambda b: b.top_height())
 
-                    supported_brick.supporting.append(brick)
-                    brick.supporters.append(supported_brick)
+                    supported_brick.supporting.add(brick)
+                    brick.supporters.add(supported_brick)
 
             # Move the brick down one if it still isn't supported
             if not brick.supported:
@@ -158,13 +161,13 @@ class FallingBricks:
         # Supported bricks get sorted by z-level of their top face
         self.supported_bricks.sort(key=lambda b: b.top_height())
 
-        print(f"Dropping {len(self.bricks)} bricks.")
         counter = 0
         while self.unsupported_bricks:
-            print(f"    Step {counter: 4}   {len(self.unsupported_bricks): 5} unsupported bricks remain.")
-            counter += 1
             self.step()
-        print(f"All bricks are supported after {counter} steps.\n")
+            counter += 1
+
+        return counter
 
     def disintegratable_bricks(self):
         return filter(lambda brick: brick.safely_disintegratable(), self.bricks)
+
