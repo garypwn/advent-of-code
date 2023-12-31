@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import bisect
 from typing import Iterable
 
 
@@ -16,6 +17,9 @@ class Brick:
         self.supporting = []
         self.supporters = []
         self.supported = self.on_ground()
+
+    def __hash__(self):
+        return hash(tuple(self.ends[0] + self.ends[1]))
 
     def on_ground(self):
         return True if self.ends[0][2] == 1 or self.ends[1][2] == 1 else False
@@ -104,11 +108,8 @@ class FallingBricks:
     def step(self):
         # Moves all the bricks down one z-level, checking for collisions.
 
-        # Bricks get sorted by z-level of their bottom face, so lower bricks should resolve first
-        self.unsupported_bricks.sort(key=lambda b: b.bottom_height())
-
-        # Supported bricks get sorted by z-level of their top face
-        self.supported_bricks.sort(key=lambda b: b.top_height())
+        idx = 0
+        new_idx = 0
 
         for brick in self.unsupported_bricks[:]:
 
@@ -118,25 +119,26 @@ class FallingBricks:
             if brick.on_ground():
                 brick.supported = True
                 self.unsupported_bricks.remove(brick)
-                self.supported_bricks.append(brick)
+                bisect.insort(self.supported_bricks, brick, key=lambda b: b.top_height())
                 continue
 
             # Check if supported by another brick
-            for i, supported_brick in enumerate(self.supported_bricks[:]):
+            for offset, supported_brick in enumerate(self.supported_bricks[idx:]):
+
+                # By maintaining a sorted list we can terminate early
+                if supported_brick.top_height() >= z:
+                    break
 
                 # We can ignore bricks whose tops are on the wrong z-level
                 if supported_brick.top_height() != z - 1:
+                    new_idx = idx + offset
                     continue
-
-                # And by maintaining a sorted list we can terminate early
-                if supported_brick.top_height() > z:
-                    break
 
                 if supported_brick.supports_brick(brick):
                     if not brick.supported:
                         brick.supported = True
                         self.unsupported_bricks.remove(brick)
-                        self.supported_bricks.insert(i, brick)
+                        bisect.insort(self.supported_bricks, brick, key=lambda b: b.top_height())
 
                     supported_brick.supporting.append(brick)
                     brick.supporters.append(supported_brick)
@@ -146,9 +148,18 @@ class FallingBricks:
                 for end in brick.ends:
                     end[2] -= 1
 
+            idx = new_idx
+
     def settle_bricks(self):
+
+        # Bricks get sorted by z-level of their bottom face, so lower bricks should resolve first
+        self.unsupported_bricks.sort(key=lambda b: b.bottom_height())
+
+        # Supported bricks get sorted by z-level of their top face
+        self.supported_bricks.sort(key=lambda b: b.top_height())
+
         print(f"Dropping {len(self.bricks)} bricks.")
-        counter = 1
+        counter = 0
         while self.unsupported_bricks:
             print(f"    Step {counter: 4}   {len(self.unsupported_bricks): 5} unsupported bricks remain.")
             counter += 1
