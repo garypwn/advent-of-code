@@ -197,3 +197,21 @@ class Hiking:
         if self.acyclic:
             return self.longest_path_acyclic(start)[end]
 
+        paths = []
+
+        def longest_path_helper(path, distance):
+
+            # Base case: We've reached the end
+            if path[-1] == end:
+                paths.append((path, distance))
+                # print(f"Found {distance} step path. {len(paths)} paths found so far.")
+                return
+
+            # Recursive case
+            for target, weight in self.edge_list[path[-1]]:
+                if target not in path:
+                    longest_path_helper(path + [target], distance + weight)
+
+        longest_path_helper([start], 0)
+        paths.sort(key=lambda x: x[1], reverse=True)
+        return paths[0]
