@@ -8,6 +8,7 @@ class Hiking:
     width: int = None
     height: int = None
     edge_list: dict = None
+    acyclic: bool
 
     def __init__(self, lines: Iterable[str]):
 
@@ -39,6 +40,7 @@ class Hiking:
         if not (self.start and self.end):
             raise ValueError("Must have start and end point.")
 
+        self.acyclic = True
         self.build_graph()
 
     def __getitem__(self, keys):
@@ -142,12 +144,17 @@ class Hiking:
             for destination, weight in paths:
                 if destination in self.edge_list.keys():
                     print(f"Found a cycle at {pt}")
+                    self.acyclic = False
                 elif destination != self.start and destination != self.end:
                     vertex_queue.append(destination)
                 self.edge_list[pt].append((destination, weight))
 
-    def junctions(self):
+    def topological_order(self):
         # Iterates over junctions, start, and end, in topological order
+        # Only works if the graph is acyclic.
+
+        if not self.acyclic:
+            raise ValueError("Graph is not acyclic!")
 
         junctions = set(self.edge_list.keys())
         stack = []
@@ -165,12 +172,12 @@ class Hiking:
 
         return stack[::-1]
 
-    def longest_path(self, start):
+    def longest_path_acyclic(self, start):
         # Finds the longest path from start to each reachable junction assuming the graph is a DAG.
 
         distances = {start: 0}  # Length from start to a given junction
 
-        for current_v in self.junctions():
+        for current_v in self.topological_order():
 
             # Skip things before start point is okay because of topological ordering
             if current_v not in distances:
@@ -184,4 +191,9 @@ class Hiking:
                     distances[outgoing_v] = max(distances[outgoing_v], distances[current_v] + weight)
 
         return distances
+
+    def longest_path(self, start, end):
+        # Finds the longest path from the start to end points
+        if self.acyclic:
+            return self.longest_path_acyclic(start)[end]
 
