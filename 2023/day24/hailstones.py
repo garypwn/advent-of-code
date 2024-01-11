@@ -1,3 +1,4 @@
+import itertools
 from collections.abc import Sequence, Iterable
 
 import numpy as np
@@ -92,3 +93,15 @@ class Hailstones:
                     intersections.append(r)
 
         return intersections
+
+    def find_parallel_hailstones(self):
+        # Returns a list of parallel hailstones, if there are any
+        pairs = []
+        for stones in itertools.combinations(self.stones, 2):
+
+            stone_1, stone_2 = (stone[1] for stone in stones)
+            cross = np.cross(stone_1, stone_2)
+            if np.isclose(cross, np.zeros(3), atol=1).all():
+                pairs.append(stones)
+
+        return pairs
