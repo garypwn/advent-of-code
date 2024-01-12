@@ -11,7 +11,7 @@ def solve_linalg(p1, p2):
     m2, w2 = p2
     A = np.asarray([[-m1[1], 1.], [-m2[1], 1.]])
     B = np.asarray([[w1[1]], [w2[1]]])
-    return np.matmul(np.linalg.inv(A), B)
+    return np.linalg.solve(A, B)
 
 
 def check_time(p, x):
