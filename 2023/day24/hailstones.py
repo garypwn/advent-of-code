@@ -25,7 +25,7 @@ def preprocess(stones: np.ndarray):
     # Creates arrays of the m and w vectors such that mx+w = [t, y, z]
     # Intermediate step for solving systems of equations
 
-    processed = np.ndarray([stones.shape[0], 2, 3])  # [Hailstone, (m, w), (t, y, z)]
+    processed = np.ndarray([stones.shape[0], 2, 3], dtype=stones.dtype)  # [Hailstone, (m, w), (t, y, z)]
     for i, stone in enumerate(stones):
         # The M array
         processed[i, 0] = stone[1]  # velocities
@@ -40,12 +40,12 @@ def preprocess(stones: np.ndarray):
     return processed
 
 
-def read_input(input_lines: Iterable[str]):
+def read_input(input_lines: Iterable[str], dtype):
     # Creates arrays of u (initial position) and v (velocity) vectors
     # Returns a 3d numpy array of all hailstones in the input
 
     lines = [line for line in input_lines]
-    arr = np.ndarray([len(lines), 2, 3])  # [Hailstone, (position, speed), (x, y, z)]
+    arr = np.ndarray([len(lines), 2, 3], dtype=dtype)  # [Hailstone, (position, speed), (x, y, z)]
     for i, line in enumerate(lines):
         for j, part in enumerate(line.split('@')):
             arr[i, j] = [tok.strip() for tok in part.split(',')]
@@ -56,17 +56,23 @@ def read_input(input_lines: Iterable[str]):
 class Hailstones:
     # Solver class for the hailstone problem. Tracks inputted hailstones, and the experiment boundary.
 
-    def __init__(self, lines: Iterable[str], lower=200000000000000, upper=400000000000000):
-        self.stones = read_input(lines)
-        self.proc = preprocess(self.stones)
+    def __init__(self, lines: Iterable[str], lower=200000000000000, upper=400000000000000, dtype=np.double):
+        self.dtype = dtype
+        self.stones = read_input(lines, dtype)
+        self.proc = None
         self.lower = lower
         self.upper = upper
 
-    def get_intersection(self, i, j):
+    def get_intersection(self, i, j, ignore_z):
         # Takes two indices i and j in the Hailstone array and checks returns where they intersect as an (x,y,z) tuple.
         # Or None if they never intersect.
+
+        if self.proc is None:
+            self.proc = preprocess(self.stones)
+
         try:
-            r = x, y = tuple(solve_linalg(self.proc[i], self.proc[j]).ravel())
+            x, y = tuple(solve_linalg(self.proc[i], self.proc[j]).ravel())
+            r = (x, y)
         except LinAlgError:
             # Lines are parallel in a plane
             return None
@@ -81,15 +87,20 @@ class Hailstones:
             if not check_time(self.proc[n], x):
                 return None
 
-        return x, y
+        # Solve for z
+        if not ignore_z:
+            z = self.proc[i, 0, 2] * x + self.proc[i, 1, 2]
+            r = (x, y, z)
 
-    def find_intersections(self):
+        return r
+
+    def find_intersections(self, ignore_z=True):
         # Returns a list containing the locations of all hailstone intersections.
         # O(n^2) operation that compares each hailstone against each other hailstone
         intersections = []
         for i in range(len(self.stones)):
             for j in range(i + 1, len(self.stones)):
-                if (r := self.get_intersection(i, j)) is not None:
+                if (r := self.get_intersection(i, j, ignore_z)) is not None:
                     intersections.append(r)
 
         return intersections
