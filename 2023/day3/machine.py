@@ -32,3 +32,23 @@ class Machine:
                     if self.array[row][col] in '@#$%&*-=+/':
                         yield int(match.group(0))
 
+    def gears(self):
+        # Iterates over gears
+        for i, line in enumerate(self.array):
+            for col, c in enumerate(line):
+                if c != '*':
+                    continue
+
+                parts = []
+
+                for row in range(i-1, i+2):
+                    if not (0 <= row < self.height):
+                        continue
+
+                    for match in _pattern.finditer(self.array[row]):
+                        if match.start() - 1 <= col <= match.end():
+                            parts.append(int(match.group(0)))
+
+                # Gears have exactly 2 adjacent parts
+                if len(parts) == 2:
+                    yield parts[0], parts[1]
