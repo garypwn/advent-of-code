@@ -1,4 +1,4 @@
-from cubes import create_games, colors
+from cubes import create_games
 
 games = create_games(open('input.txt'))
 

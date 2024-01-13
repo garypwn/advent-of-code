@@ -32,6 +32,14 @@ class CubeGame:
                 return False
         return True
 
+    def min_power(self):
+        maxes = self.max()
+        prod = 1
+        for n in maxes.values():
+            prod *= n
+
+        return prod
+
 
 def create_games(lines: Iterable[str]):
     games = []
