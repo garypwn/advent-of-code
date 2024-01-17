@@ -1,3 +1,5 @@
+import functools
+import itertools
 import re
 from typing import Iterable
 
@@ -29,4 +31,23 @@ def path_length(path, network):
                 return count
 
             curr = network[curr][0 if c == 'L' else 1]
+            count += 1
+
+
+def ghost_path_length(path, network):
+    curr = {s for s in network.keys() if s[2] == 'A'}
+    count = 0
+
+    while True:
+        for c in path:
+            all_z = True
+            for s in curr:
+                if s[2] != 'Z':
+                    all_z = False
+                    break
+
+            if all_z:
+                return count
+
+            curr = {network[s][0 if c == 'L' else 1] for s in curr}
             count += 1
