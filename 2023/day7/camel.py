@@ -33,8 +33,19 @@ class Hand:
         self._rank = self._compute_rank()
 
     def _compute_rank(self):
+        if self.cards == [-1]*5:
+            return 6
+
         buckets = {}
-        for card in self.cards:
+        for i, card in enumerate(self.cards):
+
+            if card == -1:
+                # Jokers
+
+                # All possible values of this joker, but only those already in the hand
+                hands = [Hand(self.cards[:i] + [c] + self.cards[i+1:]) for c in set(self.cards) if c != -1]
+                return max([h._compute_rank() for h in hands])
+
             if card not in buckets.keys():
                 buckets[card] = len(list(filter(lambda c: c == card, self.cards)))
 
@@ -69,5 +80,5 @@ class Hand:
         return True
 
 
-def read_lines(lines: Iterable[str]):
-    return [Hand(line) for line in lines]
+def read_lines(lines: Iterable[str], joker=False):
+    return [Hand(line, joker) for line in lines]
