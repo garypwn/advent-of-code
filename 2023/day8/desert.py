@@ -2,6 +2,7 @@ import functools
 import itertools
 import re
 from typing import Iterable
+import igraph as ig
 
 _pattern = re.compile(r"(\w+) = \((\w+), (\w+)\)")
 
@@ -51,3 +52,23 @@ def ghost_path_length(path, network):
 
             curr = {network[s][0 if c == 'L' else 1] for s in curr}
             count += 1
+
+
+def find_repetitions(path, network):
+    curr = [s for s in network.keys() if s[2] == 'A']
+    start = curr[:]
+    count = 0
+    z_counts = [[0] for _ in curr]
+
+    for _ in range(1500):
+        for c in path:
+            for i, s in enumerate(curr):
+                if s[2] == 'Z':
+                    z_counts[i].append(0)
+                else:
+                    z_counts[i][-1] += 1
+
+            curr = [network[s][0 if c == 'L' else 1] for s in curr]
+            count += 1
+
+    return z_counts
