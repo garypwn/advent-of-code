@@ -17,4 +17,8 @@ def predict(seq):
     return seq[-1] + predict(deltas(seq))
 
 
-print(predict([10, 13, 16, 21, 30, 45]))
+def predict_left(seq):
+    if seq == [0 for _ in seq]:
+        return 0
+
+    return seq[0] - predict_left(deltas(seq))
