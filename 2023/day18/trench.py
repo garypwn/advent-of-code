@@ -1,9 +1,8 @@
-import itertools
 import re
 
 from sortedcontainers import SortedDict
 
-# Trenches are sorted dicts (x,y): color
+# Trenches are dicts (x,y): color
 
 _directions = {
     'U': (0, 1),
