@@ -12,38 +12,26 @@ def parse(lines):
 @cache
 def arrangements(line: str, groups: tuple):
     if not groups:
-        if '#' in line:
-            # return []
-            return 0
-
-        # return [line.replace('?', '.')]
-        return 1
+        return 0 if '#' in line else 1
 
     n = groups[0]
+    count = 0
 
-    # results = []
-    results = 0
-
-    # Try to fit the first group in nicely
+    # Iterate over each spot the first group could fit
     for match in re.finditer(f"(?:(?<=^)|(?<=[?.]))(?=([?#]{{{n}}})($|[?.]))", line):
         pos = match.start(0)
         before = line[:pos]
         if '#' in before:
             break
-        before = '.' * pos
+
         if match[2] != '':
             remainder = line[pos + n + 1:]
-            after = '.'
         else:
-            after = ''
             remainder = ''
 
-        # s = before + '#' * n + after
+        count += arrangements(remainder, groups[1:])
 
-        # results += [s + r for r in arrangements(remainder, groups[1:])]
-        results += arrangements(remainder, groups[1:])
-
-    return results
+    return count
 
 
 def unfold(lines):
