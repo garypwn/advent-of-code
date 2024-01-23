@@ -59,7 +59,7 @@ class Pipes:
 def area(loop):
     # The area bounded by the inside edge of the pipes in the loop
     a = 0
-    for prev, curr, ahead in zip(loop[-1:] + loop[:-1], loop, loop[1:] + loop[:1]):
+    for curr, ahead in zip(loop, loop[1:] + loop[:1]):
         match sub(curr, ahead):
             case (0, 1):
                 value = 1
