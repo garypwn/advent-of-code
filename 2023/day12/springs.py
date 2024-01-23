@@ -1,14 +1,16 @@
 import re
+from functools import cache
 
 
 def parse(lines):
     for line in lines:
         springs, groups = line.split()
         groups = [int(g) for g in groups.split(',')]
-        yield springs, groups
+        yield springs, tuple(groups)
 
 
-def arrangements(line: str, groups):
+@cache
+def arrangements(line: str, groups: tuple):
     if not groups:
         if '#' in line:
             return []
@@ -38,3 +40,8 @@ def arrangements(line: str, groups):
         results += [s + r for r in arrangements(remainder, groups[1:])]
 
     return results
+
+
+def unfold(lines):
+    for line, groups in lines:
+        yield '?'.join([line]*5), groups * 5
