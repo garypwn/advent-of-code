@@ -21,27 +21,24 @@ def galaxies(universe):
     return zip(pts[0], pts[1])
 
 
-def manhattan_dist(universe, pts, x_size):
+def manhattan_dist(universe_sized, pts, x_size):
+
     ((x1, y1), (x2, y2)) = pts
-    zone = universe[min(x1, x2):max(x1, x2) + 1, min(y1, y2):max(y1, y2) + 1]
+    zone = universe_sized[min(x1, x2):max(x1, x2) + 1, min(y1, y2):max(y1, y2) + 1]
 
     distance = -2
 
-    for i in range(2):
-        counts = np.unique(np.moveaxis(zone, i, 0)[0], return_counts=True)
-        for c, n in zip(counts[0], counts[1]):
-            if c == 'x':
-                distance += x_size * n
-            else:
-                distance += n
+    distance += sum(zone[:, 0])
+    distance += sum(zone[0, :])
 
-    return distance
+    return int(distance)
 
 
 def solve(universe, x_size):
     total = 0
     g = galaxies(universe)
+    sized = (universe == 'x') * (x_size - 1) + 1
     for pts in itertools.combinations(g, 2):
-        total += manhattan_dist(universe, pts, x_size)
+        total += manhattan_dist(sized, pts, x_size)
 
     return total
