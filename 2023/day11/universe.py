@@ -8,14 +8,12 @@ def parse(lines):
 
 
 def expand(universe, axis):
-    offset = 0
-    result = universe
-    for i, row in enumerate(np.rollaxis(universe, axis)):
-        if (np.unique(row) == '.').all():
-            result = np.insert(result, i + offset, row, axis=axis)
-            offset += 1
+    result = np.moveaxis(universe, axis, 0)
+    for i, row in enumerate(result):
+        if (np.unique(row) != '#').all():
+            result[i] = np.full(row.shape, 'x')
 
-    return result
+    return np.moveaxis(result, 0, axis)
 
 
 def galaxies(universe):
@@ -23,13 +21,27 @@ def galaxies(universe):
     return zip(pts[0], pts[1])
 
 
-def manhattan_dist(p1, p2):
-    return sum(abs(b - a) for a, b in zip(p1, p2))
+def manhattan_dist(universe, pts, x_size):
+    ((x1, y1), (x2, y2)) = pts
+    zone = universe[min(x1, x2):max(x1, x2) + 1, min(y1, y2):max(y1, y2) + 1]
+
+    distance = -2
+
+    for i in range(2):
+        counts = np.unique(np.moveaxis(zone, i, 0)[0], return_counts=True)
+        for c, n in zip(counts[0], counts[1]):
+            if c == 'x':
+                distance += x_size * n
+            else:
+                distance += n
+
+    return distance
 
 
-def solve_p1(universe):
+def solve(universe, x_size):
     total = 0
-    for g1, g2 in itertools.combinations(galaxies(universe), 2):
-        total += manhattan_dist(g1, g2)
+    g = galaxies(universe)
+    for pts in itertools.combinations(g, 2):
+        total += manhattan_dist(universe, pts, x_size)
 
     return total
