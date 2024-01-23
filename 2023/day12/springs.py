@@ -13,13 +13,16 @@ def parse(lines):
 def arrangements(line: str, groups: tuple):
     if not groups:
         if '#' in line:
-            return []
+            # return []
+            return 0
 
-        return [line.replace('?', '.')]
+        # return [line.replace('?', '.')]
+        return 1
 
     n = groups[0]
 
-    results = []
+    # results = []
+    results = 0
 
     # Try to fit the first group in nicely
     for match in re.finditer(f"(?:(?<=^)|(?<=[?.]))(?=([?#]{{{n}}})($|[?.]))", line):
@@ -35,9 +38,10 @@ def arrangements(line: str, groups: tuple):
             after = ''
             remainder = ''
 
-        s = before + '#' * n + after
+        # s = before + '#' * n + after
 
-        results += [s + r for r in arrangements(remainder, groups[1:])]
+        # results += [s + r for r in arrangements(remainder, groups[1:])]
+        results += arrangements(remainder, groups[1:])
 
     return results
 
