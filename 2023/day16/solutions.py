@@ -1,5 +1,3 @@
-import cProfile
-
 from mirrors import *
 
 m = Mirror(open('input.txt'))
