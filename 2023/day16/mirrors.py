@@ -5,11 +5,21 @@ def parse(lines):
     return np.char.asarray([[s for s in line.strip()] for line in lines], itemsize=1)
 
 
+def energized(lights):
+    return len(set((x for x, _ in lights)))
+
+
+def entry_points(shape):
+    ds = ((RIGHT, LEFT), (DOWN, UP))
+    for s, (f, b) in zip(shape, ds):
+        for i in range(s):
+            yield (i, 0), f
+            yield (i, s - 1), b
+
 class Mirror:
 
     def __init__(self, lines):
         self.grid = parse(lines)
-        self.lights = set()
 
     def _propagate(self, light):
 
@@ -46,14 +56,13 @@ class Mirror:
 
         return new_lights
 
-    def process(self, pos=(0, 0), direction=RIGHT):
+    def process_light(self, pos=(0, 0), direction=RIGHT):
+        lights = set()
         queue = {(pos, direction)}
 
         while queue:
             light = queue.pop()
-            queue |= self._propagate(light) - self.lights
-            self.lights.add(light)
+            queue |= self._propagate(light) - lights
+            lights.add(light)
 
-    def energized(self):
-        return len(set((x for x, _ in self.lights)))
-
+        return lights
