@@ -31,5 +31,36 @@ def roll(platform: np.array, direction):
             row[i1 + 1:i2] = ['O'] * n + ['.'] * (len(row[i1 + 1:i2]) - n)
 
 
+def spin(platform):
+    for d in 'NWSE':
+        roll(platform, d)
+
+
+def predict(platform, count):
+    hashes_seq = [hash(platform.tobytes())]
+    hashes = set(hashes_seq)
+
+    i = 0
+    while True:
+        i += 1
+        spin(platform)
+        s = hash(platform.tobytes())
+        if s in hashes:
+            break
+
+        hashes.add(s)
+        hashes_seq.append(s)
+
+    offset = hashes_seq.index(s)
+    target = (count - offset) % (i - offset)
+    target = hashes_seq[target + offset]
+
+    while True:
+        if hash(platform.tobytes()) == target:
+            return
+
+        spin(platform)
+
+
 def load(platform):
     return sum([(i + 1) * sum(row == 'O') for i, row in enumerate(platform[::-1])])
