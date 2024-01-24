@@ -1,13 +1,7 @@
 from functools import cache
 
-import numpy as np
-
-from utils.idx_tools import UP, DOWN, RIGHT, LEFT, bounds
+from utils.idx_tools import UP, DOWN, RIGHT, LEFT, bounds, chararray
 from utils.tuples import add
-
-
-def parse(lines):
-    return np.char.asarray([[s for s in line.strip()] for line in lines], itemsize=1)
 
 
 def energized(lights):
@@ -25,7 +19,7 @@ def entry_points(shape):
 class Mirror:
 
     def __init__(self, lines):
-        self.grid = parse(lines)
+        self.grid = chararray(lines)
 
     @cache
     def _propagate(self, light):
@@ -58,7 +52,7 @@ class Mirror:
         new_lights = set()
         for d in ds:
             new_idx = add(idx, d)
-            if bounds(new_idx, self.grid):
+            if bounds(self.grid, new_idx):
                 new_lights.add((new_idx, d))
 
         return new_lights
