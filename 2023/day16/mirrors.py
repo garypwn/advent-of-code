@@ -16,11 +16,13 @@ def entry_points(shape):
             yield (i, 0), f
             yield (i, s - 1), b
 
+
 class Mirror:
 
     def __init__(self, lines):
         self.grid = parse(lines)
 
+    @cache
     def _propagate(self, light):
 
         idx, d = light
