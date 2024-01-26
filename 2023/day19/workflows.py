@@ -1,4 +1,3 @@
-import itertools
 import re
 
 _workflow_pattern = re.compile(r"^(\w+){(\S+)}$")
