@@ -89,6 +89,32 @@ class Workflows:
                     curr = target
                     break
 
+    def accepted_range(self, p_range, curr):
+        if curr == 'R':
+            return 0
+        if curr == 'A':
+            prod = 1
+            for c in 'xmas':
+                prod *= p_range[1][c] - p_range[0][c]
+
+            return prod
+
+        accepted = 0
+        remainder = p_range
+
+        for target, cond in self.workflows[curr]:
+            if remainder is None:
+                break
+
+            if cond[0] is not None:
+                remainder, passed = _eval_range(remainder, cond)
+            else:
+                remainder, passed = None, remainder
+            if passed is not None:
+                accepted += self.accepted_range(passed, target)
+
+        return accepted
+
 
 def solve(lines):
     parts, workflows = parse(lines)
@@ -98,29 +124,32 @@ def solve(lines):
     return sum(accepted)
 
 
+def _eval_range(p_range: tuple[dict[str: int]], cond):
+    # Splits a range into (false, true) sub ranges
+
+    attr, value, gt = cond
+    bound = _boundary(cond)
+
+    if p_range[0][attr] <= bound < p_range[1][attr]:
+        # Splitting range
+        below = (p_range[0].copy(), {t: bound if t == attr else v for t, v in p_range[1].items()})
+        above = ({t: bound if t == attr else v for t, v in p_range[0].items()}, p_range[1].copy())
+
+    else:
+        if bound > p_range[0][attr]:
+            below, above = p_range, None
+        else:
+            below, above = None, p_range
+
+    if gt:
+        return below, above
+    else:
+        return above, below
+
+
 def solve_p2(lines, min_val=1, max_val=4000):
     parts, workflows = parse(lines)
     workflows = Workflows(workflows)
 
-    b = ((c[0], _boundary(c)) for wf in workflows.workflows.values() for _, c in wf if c[0] is not None)
-
-    bounds = {s: [min_val] for s in 'xmas'}
-    for attr, bound in b:
-        bounds[attr].append(bound)
-
-    for s in 'xmas':
-        bounds[s].sort()
-        bounds[s].append(max_val + 1)
-
-    accepted = 0
-
-    for x, m, a, s in itertools.product(*(itertools.pairwise(bounds[a]) for a in 'xmas')):
-        part = {'x': x[1] - 1, 'm': m[1] - 1, 'a': a[1] - 1, 's': s[1] - 1}
-        power = 1
-        for n1, n2 in (x, m, a, s):
-            power *= n2 - n1
-
-        if workflows.accepted(part):
-            accepted += power
-
-    return accepted
+    p_range = ({c: min_val for c in 'xmas'}, {c: max_val + 1 for c in 'xmas'})
+    return workflows.accepted_range(p_range, 'in')
