@@ -1,3 +1,4 @@
+import itertools
 import re
 
 _workflow_pattern = re.compile(r"^(\w+){(\S+)}$")
@@ -32,6 +33,17 @@ def _eval(part, cond):
         return part[arg1] > arg2
     else:
         return part[arg1] < arg2
+
+
+def _boundary(cond):
+    # Exclusive boundary
+    attribute, arg2, gt = cond
+    if attribute is None:
+        return None
+    if gt:
+        return arg2 + 1
+    else:
+        return arg2
 
 
 def _parse_workflow(s):
@@ -84,3 +96,31 @@ def solve(lines):
 
     accepted = [sum(part.values()) for part in parts if workflows.accepted(part)]
     return sum(accepted)
+
+
+def solve_p2(lines, min_val=1, max_val=4000):
+    parts, workflows = parse(lines)
+    workflows = Workflows(workflows)
+
+    b = ((c[0], _boundary(c)) for wf in workflows.workflows.values() for _, c in wf if c[0] is not None)
+
+    bounds = {s: [min_val] for s in 'xmas'}
+    for attr, bound in b:
+        bounds[attr].append(bound)
+
+    for s in 'xmas':
+        bounds[s].sort()
+        bounds[s].append(max_val + 1)
+
+    accepted = 0
+
+    for x, m, a, s in itertools.product(*(itertools.pairwise(bounds[a]) for a in 'xmas')):
+        part = {'x': x[1] - 1, 'm': m[1] - 1, 'a': a[1] - 1, 's': s[1] - 1}
+        power = 1
+        for n1, n2 in (x, m, a, s):
+            power *= n2 - n1
+
+        if workflows.accepted(part):
+            accepted += power
+
+    return accepted
