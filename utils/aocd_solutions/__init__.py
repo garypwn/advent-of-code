@@ -41,23 +41,25 @@ class Puzzle(aocd.models.Puzzle):
         return all_pass
 
     # Submit answers
-    def check_solutions(self):
+    def check_solutions(self, submit=True):
         if self._solution_funcs[0]:
             result = self._solution_funcs[0](self.input_data)
             print(f"Part A result: {result}")
-            self.answer_a = result
+            if submit:
+                self.answer_a = result
+
         if self._solution_funcs[1]:
             result = self._solution_funcs[1](self.input_data)
             print(f"Part B result: {result}")
-            self.answer_b = result
-
+            if submit:
+                self.answer_b = result
 
 
 def _check_answer(f, data, answer):
     try:
         result = str(f(data))
     except Exception as E:
-        return E
+        return str(E)
 
     if result:
-        return "Pass" if result == answer else f"Fail.\n Your answer was {result}. Expected {answer}.\n"
+        return "Pass" if result == answer else f"Fail.\nYour answer was {result}. Expected {answer}.\n"
