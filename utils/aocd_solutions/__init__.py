@@ -4,15 +4,15 @@ import aocd.models
 
 
 class Puzzle(aocd.models.Puzzle):
-    _solution_funcs: list[Callable[[str], int]] = [None, None]
+    _solution_funcs: list[Callable[[str], int | str]] = [None, None]
 
     # Set the part 1 solution function
-    def solution_a(self, func: Callable[[str], int]):
+    def solution_a(self, func: Callable[[str], int | str]):
         self._solution_funcs[0] = func
         return func
 
     # Set the part 2 solution function
-    def solution_b(self, func: Callable[[str], int]):
+    def solution_b(self, func: Callable[[str], int | str]):
         self._solution_funcs[1] = func
         return func
 
@@ -56,10 +56,7 @@ class Puzzle(aocd.models.Puzzle):
 
 
 def _check_answer(f, data, answer):
-    try:
-        result = str(f(data))
-    except Exception as E:
-        return str(E)
 
+    result = f(data)
     if result:
-        return "Pass" if result == answer else f"Fail.\nYour answer was {result}. Expected {answer}.\n"
+        return "Pass" if str(result) == answer else f"Fail.\nYour answer was {result}. Expected {answer}.\n"
