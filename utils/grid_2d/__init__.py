@@ -29,6 +29,10 @@ CCW = {
     LEFT: DOWN
 }
 
+DIRECTION_DICT = {
+    'U': UP, 'D': DOWN, 'L': LEFT, 'R': RIGHT
+}
+
 
 @singledispatch
 def bounds(arr: np.ndarray or list, idx: tuple[int]) -> bool:

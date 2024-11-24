@@ -1,6 +1,6 @@
 from functools import cache
 
-from utils.idx_tools import UP, DOWN, RIGHT, LEFT, bounds, chararray
+from utils.grid_2d import UP, DOWN, RIGHT, LEFT, bounds, chararray
 from utils.tuples import add
 
 

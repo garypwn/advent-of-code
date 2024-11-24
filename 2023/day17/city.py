@@ -4,7 +4,7 @@ import numpy as np
 from numpy import ndarray, dtype
 from sortedcontainers import SortedSet
 
-from utils.idx_tools import DIRECTIONS, bounds
+from utils.grid_2d import DIRECTIONS, bounds
 from utils.tuples import add
 
 
