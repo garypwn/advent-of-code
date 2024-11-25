@@ -43,6 +43,14 @@ def shortest_path(data):
     path = g.get_shortest_path(start, end, output='epath')
     return len(path)
 
+@puzzle.solution_b
+def shortest_path_p2(data):
+    g, grid, _, end = create_graph(data)
+    starts = [str(i) for i in np.argwhere(grid == ord('a'))]
+
+    # For whatever reason this returns a list of lists, so we just unwrap it
+    distances = [l[0] for l in g.distances(starts, end)]
+    return min(distances)
 
 puzzle.check_examples()
 puzzle.check_solutions()
