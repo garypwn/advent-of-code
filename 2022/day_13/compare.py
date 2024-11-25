@@ -1,5 +1,6 @@
 import json
 from functools import cmp_to_key
+from itertools import chain
 
 from utils.aocd_solutions import Puzzle
 
@@ -39,6 +40,18 @@ def solve_p1(data):
             correct_indices.append(i+1)
 
     return sum(correct_indices)
+
+@puzzle.solution_b
+def solve_p2(data):
+    packets = list(chain(*pairs(data))) + [[[2]], [[6]]]
+    packets.sort(key=cmp_to_key(cmp))
+
+    k = 1
+    for i, p in enumerate(packets):
+        if p == [[2]] or p == [[6]]:
+            k *= i+1
+
+    return k
 
 puzzle.check_examples()
 puzzle.check_solutions()
