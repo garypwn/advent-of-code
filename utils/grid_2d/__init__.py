@@ -74,7 +74,7 @@ def coordinates_to_grid(values: Iterable[tuple[npt.ArrayLike, int]], start_shape
     for pt, value in values:
         if any(a >= b for a, b in zip(pt, grid.shape)):
             pad = [(0, max(0, a - b + 1)) for a, b in zip(pt, grid.shape)]
-            grid = np.pad(grid, pad, constant_values=fill)
+            grid = np.pad(grid, pad, constant_values=0)
 
         grid[pt] = value
 

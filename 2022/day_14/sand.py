@@ -18,7 +18,7 @@ def walls(data):
 
 def create_grid(data):
     coordinates = chain(*(nd_range_inclusive(*wall) for wall in walls(data)))
-    return coordinates_to_grid(((coord, 2) for coord in coordinates))
+    return coordinates_to_grid(((coord, 2) for coord in coordinates), start_shape=[1000, 8])
 
 
 def fill_sand(grid):
@@ -30,8 +30,9 @@ def fill_sand(grid):
 
             new_tgt = tgt
             for t in [(tgt[0] + x, tgt[1] + 1) for x in [0, -1, 1]]:
-                # Check if sand would flow off the edge of the map
-                if any(not 0 <= c < b for c, b in zip(t, grid.shape)):
+
+                # Check if sand would flow off the bottom of the map
+                if t[1] >= grid.shape[1]:
                     return
 
                 if grid[t] == 0:
@@ -47,6 +48,15 @@ def fill_sand(grid):
 @puzzle.solution_a
 def solve_p1(data):
     grid = create_grid(data)
+    fill_sand(grid)
+    return np.count_nonzero(grid == 1)
+
+
+@puzzle.solution_b
+def solve_p2(data):
+    grid = create_grid(data)
+    grid = np.pad(grid, ((0, 0), (0, 2)))
+    grid[:, -1] = 2
     fill_sand(grid)
     return np.count_nonzero(grid == 1)
 
