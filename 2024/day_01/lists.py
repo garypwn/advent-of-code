@@ -21,5 +21,17 @@ def sum_distances(data):
 
     return sum([abs(a - b) for a, b in zip(l1, l2)])
 
+@puzzle.solution_b
+def similarity_score(data):
+    l1, l2 = parse(data)
+    counts = {n: 0 for n in l1}
+    for i in l2:
+        if i in counts:
+            counts[i] += 1
+        else:
+            counts[i] = 1
+
+    return sum(counts[i] * i for i in l1)
+
 puzzle.check_examples()
 puzzle.check_solutions()
