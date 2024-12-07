@@ -24,18 +24,20 @@ class Puzzle(aocd.models.Puzzle):
 
         for i, example in enumerate(self.examples):
             if self._solution_funcs[0] and example.answer_a:
+                t = time()
                 s = _check_answer(self._solution_funcs[0], example.input_data, example.answer_a, args, kwargs)
                 if s != "Pass":
                     all_pass = False
                 if s:
-                    print(f"Example {i+1}A: {s}")
+                    print(f"Example {i+1}A: {s}\t\t(t={time()-t}s)")
 
             if self._solution_funcs[1] and example.answer_b:
+                t = time()
                 s = _check_answer(self._solution_funcs[1], example.input_data, example.answer_b, args, kwargs)
                 if s != "Pass":
                     all_pass = False
                 if s:
-                    print(f"Example {i+1}B: {s}")
+                    print(f"Example {i+1}B: {s}\t\t(t={time()-t}s)")
 
             if example.extra:
                 print(f"Note: {example.extra}\n")
