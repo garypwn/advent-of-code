@@ -15,7 +15,7 @@ UP = (-1, 0)
 DOWN = (1, 0)
 RIGHT = (0, 1)
 LEFT = (0, -1)
-DIRECTIONS = {UP, DOWN, LEFT, RIGHT}
+DIRECTIONS = [UP, DOWN, LEFT, RIGHT]
 DIRECTIONS_NP = [np.asarray(d) for d in DIRECTIONS]
 
 CW = {

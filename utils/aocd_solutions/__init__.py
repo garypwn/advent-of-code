@@ -1,3 +1,5 @@
+import itertools
+from time import time
 from typing import Callable
 
 import aocd.models
@@ -17,19 +19,19 @@ class Puzzle(aocd.models.Puzzle):
         return func
 
     # Check the solution(s) against the listed examples
-    def check_examples(self):
+    def check_examples(self, *args, **kwargs):
         all_pass = True
 
         for i, example in enumerate(self.examples):
             if self._solution_funcs[0] and example.answer_a:
-                s = _check_answer(self._solution_funcs[0], example.input_data, example.answer_a)
+                s = _check_answer(self._solution_funcs[0], example.input_data, example.answer_a, args, kwargs)
                 if s != "Pass":
                     all_pass = False
                 if s:
                     print(f"Example {i+1}A: {s}")
 
             if self._solution_funcs[1] and example.answer_b:
-                s = _check_answer(self._solution_funcs[1], example.input_data, example.answer_b)
+                s = _check_answer(self._solution_funcs[1], example.input_data, example.answer_b, args, kwargs)
                 if s != "Pass":
                     all_pass = False
                 if s:
@@ -41,22 +43,27 @@ class Puzzle(aocd.models.Puzzle):
         return all_pass
 
     # Submit answers
-    def check_solutions(self, submit=True):
+    def check_solutions(self, *args, **kwargs):
         if self._solution_funcs[0]:
-            result = self._solution_funcs[0](self.input_data)
-            print(f"Part A result: {result}")
-            if submit:
-                self.answer_a = result
+            t = time()
+            result = self._solution_funcs[0](*itertools.chain((self.input_data,), args), **kwargs)
+            print(f"Part A result: {result}\t\t(t={time()-t}s)")
+            self.answer_a = result
 
         if self._solution_funcs[1]:
-            result = self._solution_funcs[1](self.input_data)
-            print(f"Part B result: {result}")
-            if submit:
-                self.answer_b = result
+            t = time()
+            result = self._solution_funcs[1](*itertools.chain((self.input_data,), args), **kwargs)
+            print(f"Part B result: {result}\t\t(t={time()-t}s)")
+            self.answer_b = result
 
 
-def _check_answer(f, data, answer):
+def _check_answer(f, data, answer, args=None, kwargs=None):
 
-    result = f(data)
+    if kwargs is None:
+        kwargs = {}
+    if args is None:
+        args = []
+
+    result = f(*itertools.chain((data,), args), **kwargs)
     if result:
         return "Pass" if str(result) == answer else f"Fail.\nYour answer was {result}. Expected {answer}.\n"
