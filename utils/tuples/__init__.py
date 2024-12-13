@@ -29,10 +29,30 @@ def dot[T](t1: tuple[T], t2: tuple[T]) -> T:
     """Compute the dot product of two tuples of the same length"""
     return sum(a * b for a, b in zip(t1, t2))
 
+
+@cache
+def mod[T](t1: tuple[T], t2: tuple[T]) -> T:
+    """Compute the modulo of two tuples of the same length"""
+    return tuple(a % b for a, b in zip(t1, t2))
+
+
+@cache
+def mul[T](t1: tuple[T], t2: tuple[T]) -> T:
+    """Compute the product of two tuples of the same length"""
+    return tuple(a * b for a, b in zip(t1, t2))
+
+
+@cache
+def floordiv[T](t1: tuple[T], t2: tuple[T]) -> T:
+    """Compute integer dividend of two tuples of the same length"""
+    return tuple(a // b for a, b in zip(t1, t2))
+
+
 @cache
 def scale[T](t: tuple[T], s: T) -> T:
     """Multiply a tuple t by a scalar s"""
     return tuple(a * s for a in t)
+
 
 @cache
 def sgn[T](t: tuple[T]) -> T:
