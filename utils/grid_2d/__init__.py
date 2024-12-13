@@ -6,7 +6,6 @@ and that (0,0) is the top left corner of the structure.
 """
 from collections.abc import Iterable
 from functools import singledispatch
-from itertools import chain
 
 import numpy as np
 import numpy.typing as npt
@@ -15,30 +14,49 @@ UP = (-1, 0)
 DOWN = (1, 0)
 RIGHT = (0, 1)
 LEFT = (0, -1)
+
+UP_RIGHT = (-1, 1)
+UP_LEFT = (-1, -1)
+DOWN_RIGHT = (1, 1)
+DOWN_LEFT = (1, -1)
+
 DIRECTIONS = [UP, DOWN, LEFT, RIGHT]
+DIRECTIONS_DIAG = [UP_RIGHT, UP_LEFT, DOWN_RIGHT, DOWN_LEFT]
 DIRECTIONS_NP = [np.asarray(d) for d in DIRECTIONS]
 
 CW = {
     UP: RIGHT,
     RIGHT: DOWN,
     DOWN: LEFT,
-    LEFT: UP
+    LEFT: UP,
+
+    UP_RIGHT: DOWN_RIGHT,
+    DOWN_RIGHT: DOWN_LEFT,
+    DOWN_LEFT: UP_LEFT,
+    UP_LEFT: UP_RIGHT
 }
 
 CCW = {
     UP: LEFT,
     RIGHT: UP,
     DOWN: RIGHT,
-    LEFT: DOWN
+    LEFT: DOWN,
+
+    UP_RIGHT: UP_LEFT,
+    DOWN_RIGHT: UP_RIGHT,
+    DOWN_LEFT: DOWN_RIGHT,
+    UP_LEFT: DOWN_LEFT
 }
 
 DIRECTION_DICT = {
-    'U': UP, 'D': DOWN, 'L': LEFT, 'R': RIGHT
+    'U': UP, 'D': DOWN, 'L': LEFT, 'R': RIGHT,
+    'N': UP, 'S': DOWN, 'W': LEFT, 'E': RIGHT,
+    'NE': UP_RIGHT, 'NW': UP_LEFT, 'SE': DOWN_RIGHT, 'SW': DOWN_LEFT
 }
 
 
 @singledispatch
-def bounds(arr: np.ndarray or list, idx: tuple[int]) -> bool:
+def bounds() -> bool:
     """Check if a multidimensional array index is in bounds"""
     raise ValueError("Invalid types")
 
@@ -70,11 +88,12 @@ def chararray(lines: Iterable[str]) -> np.chararray:
 
 
 def coordinates_to_grid(values: Iterable[tuple[npt.ArrayLike, int]], start_shape=(20, 20), fill=0) -> np.ndarray:
+    """Creates a grid from a list of ((x,y), val) coordinate-value pairs"""
     grid = np.full(start_shape, fill)
     for pt, value in values:
         if any(a >= b for a, b in zip(pt, grid.shape)):
-            pad = [(0, max(0, a - b + 1)) for a, b in zip(pt, grid.shape)]
-            grid = np.pad(grid, pad, constant_values=0)
+            pad = np.asarray([(0, max(0, a - b + 1)) for a, b in zip(pt, grid.shape)])
+            grid = np.pad(array=grid, pad_width=pad, constant_values=0)
 
         grid[pt] = value
 
@@ -100,3 +119,23 @@ def nd_range_inclusive(c1: npt.ArrayLike | None, c2=npt.ArrayLike | None):
         for i in range(start, stop + 1):
             for j in nd_range_inclusive(c1[1:] if c1 else None, c2[1:] if c2 else None):
                 yield (i,) + j
+
+
+def diag_range(stop_1, stop_2):
+    """Yields lists of indices representing diagonal rows in a grid"""
+    for i in range(stop_1):
+        yield zip(range(i, -1, -1), range(0, min(i + 1, stop_2)))
+    for i in range(1, stop_2):
+        yield zip(range(stop_1 - 1, -1, -1), range(i, stop_2))
+
+
+def diag_iter(arr):
+    """Yields diagonal rows of a grid"""
+    for row in diag_range(len(arr), len(arr[0])):
+        yield (arr[i][j] for i, j in row)
+
+
+def diag_enumerate(arr):
+    """Yields diagonal rows of a grid with indices"""
+    for row in diag_range(len(arr), len(arr[0])):
+        yield ((i, j), arr[i][j] for i, j in row)
