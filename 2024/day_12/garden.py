@@ -1,12 +1,11 @@
 import sys
-from copy import copy
 from itertools import product
 
 import numpy as np
 
 from utils import tuples
 from utils.aocd_solutions import Puzzle
-from utils.grid_2d import DIRECTIONS, CCW, CW
+from utils.grid_2d import CCW, CW, DIRECTIONS
 
 puzzle = Puzzle(2024, 12)
 
@@ -22,7 +21,7 @@ def get_regions(grid):
         if start in accounted:
             continue
 
-        # Simple BFS from each unaccounted pt
+        # Simple search from each unaccounted pt
         val = grid[start]
         zone = set()  # Set of pts in the region
         perimeter = set()  # Set of (pt, tgt) pairs that make up the perimeter
