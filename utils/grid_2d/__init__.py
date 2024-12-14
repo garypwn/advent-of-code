@@ -138,4 +138,5 @@ def diag_iter(arr):
 def diag_enumerate(arr):
     """Yields diagonal rows of a grid with indices"""
     for row in diag_range(len(arr), len(arr[0])):
-        yield ((i, j), arr[i][j] for i, j in row)
+        yield (((i, j), arr[i][j]) for i, j in row)
+

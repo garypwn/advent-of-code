@@ -50,13 +50,15 @@ class Puzzle(aocd.models.Puzzle):
             t = time()
             result = self._solution_funcs[0](*itertools.chain((self.input_data,), args), **kwargs)
             print(f"Part A result: {result}\t\t(t={time()-t}s)")
-            self.answer_a = result
+            if result is not None:
+                self.answer_a = result
 
         if self._solution_funcs[1]:
             t = time()
             result = self._solution_funcs[1](*itertools.chain((self.input_data,), args), **kwargs)
             print(f"Part B result: {result}\t\t(t={time()-t}s)")
-            self.answer_b = result
+            if result is not None:
+                self.answer_b = result
 
 
 def _check_answer(f, data, answer, args=None, kwargs=None):
