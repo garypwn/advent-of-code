@@ -1,9 +1,11 @@
+import math
 import operator
 import re
 from functools import reduce
 from itertools import product
 
 import numpy as np
+from numpy.ma.extras import average
 
 from utils import tuples
 from utils.aocd_solutions import Puzzle
@@ -19,10 +21,10 @@ def parse(data):
         yield (p1, p2), (v1, v2)
 
 
-def step(robots, bounds):
+def step(robots, bounds, steps=1):
     for robot in robots:
         p, v = robot
-        yield tuples.mod(tuples.add(p, v), bounds), v
+        yield tuples.mod(tuples.add(p, tuples.scale(v, steps)), bounds), v
 
 
 def quadrants(robots, bounds):
@@ -48,32 +50,62 @@ def solve_p1(data, bounds=(101, 103)):
 
 
 @puzzle.solution_b
-def solve_p2(data, bounds=(101, 103)):
-    # We observed after printing out a lot of patterns that there are often partial lines at y=30, y=60 and x=37, x=69
-    robots = parse(data)
+def solve_p2(data, bounds=(101, 103), verify_ct=0):
+    robots = list(parse(data))
 
-    avg = None
+    def density_x(a):
+        for i in range(a.shape[0]):
+            yield np.count_nonzero(a[i, :])
 
-    for n in range(100000):
+    def density_y(a):
+        for i in range(a.shape[1]):
+            yield np.count_nonzero(a[:, i])
+
+    arr = coordinates_to_grid([(p, 1) for p, _ in robots])
+    avg_density_x = sum(density_x(arr)) / arr.shape[0]
+    avg_density_y = sum(density_y(arr)) / arr.shape[0]
+
+    offset_x = None
+    period_x = None
+    verify_x = 0
+
+    offset_y = None
+    period_y = None
+    verify_y = 0
+
+    for n in range(1, 100000):
         robots = list(step(robots, bounds))
         arr = coordinates_to_grid([(p, 1) for p, _ in robots])
 
-        bots = np.count_nonzero(arr[:, 37])
-        bots += np.count_nonzero(arr[:, 69])
-        bots += np.count_nonzero(arr[30])
-        bots += np.count_nonzero(arr[70])
+        tgt_x = max(density_x(arr))
+        tgt_y = max(density_y(arr))
 
-        avg = bots if avg is None else (avg * (n - 1) + bots) / n
+        if tgt_x > avg_density_x * 3.5:
+            if not offset_x:
+                offset_x = n
+            elif not period_x:
+                period_x = n - offset_x
+            else:
+                assert n % period_x == offset_x
+                verify_x += 1
 
-        # We're looking for far fewer bots around the outside than average
-        if bots >= avg * 5:
+        if tgt_y > avg_density_y * 3:
+            if not offset_y:
+                offset_y = n
+            elif not period_y:
+                period_y = n - offset_y
+            else:
+                assert n % period_y == offset_y
+                verify_y += 1
 
-            print(f"\n\n Loop #{n + 1}.")
-            arr = np.transpose(arr)
-            for line in arr:
-                print(''.join(('X' if x == 1 else ' ' for x in line)))
+        if period_x and period_y and verify_x == verify_ct and verify_y == verify_ct:
+            break
 
-            return n + 1
+    # Check periods are coprime
+    assert math.gcd(period_y, period_x) == 1
+
+    # We can solve for the time of convergence with the Chinese Remainder Theorem
+    return ((-offset_x + offset_y) * pow(period_x, -1, period_y) % period_y) * period_x + offset_x
 
 
 puzzle.check_examples((11, 7))
