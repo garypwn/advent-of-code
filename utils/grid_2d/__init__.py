@@ -51,6 +51,7 @@ CCW = {
 DIRECTION_DICT = {
     'U': UP, 'D': DOWN, 'L': LEFT, 'R': RIGHT,
     'N': UP, 'S': DOWN, 'W': LEFT, 'E': RIGHT,
+    '^': UP, 'v': DOWN, '<': LEFT, '>': RIGHT,
     'NE': UP_RIGHT, 'NW': UP_LEFT, 'SE': DOWN_RIGHT, 'SW': DOWN_LEFT
 }
 
