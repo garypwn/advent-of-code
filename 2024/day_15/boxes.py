@@ -129,7 +129,7 @@ class Grid:
                 self._move_obj_fat(tgt, d)
 
 
-def gps(p, fat):
+def gps(p):
     # "The GPS coordinate of a box is equal to 100 times its distance from the top edge of the map
     # plus its distance from the left edge of the map."
 
@@ -143,7 +143,7 @@ def solve_p1(data, fat=False):
     for d in (DIRECTION_DICT[m] for m in moves):
         grid.move(d)
 
-    return sum(gps(box, fat) for box in grid.boxes)
+    return sum(gps(box) for box in grid.boxes)
 
 
 @puzzle.solution_b
