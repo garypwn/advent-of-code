@@ -73,8 +73,9 @@ class Vector2:
         return all(self.pt)
 
     def __eq__(self, other):
-        if self[0] == other[0] and self[1] == other[1]:
-            return True
+        if other is None:
+            return False
+        return self[0] == other[0] and self[1] == other[1]
 
     def __hash__(self):
         return hash(self.pt)

@@ -10,6 +10,8 @@ from functools import singledispatch
 import numpy as np
 import numpy.typing as npt
 
+from utils.vector import Vector2
+
 UP = (-1, 0)
 DOWN = (1, 0)
 RIGHT = (0, 1)
@@ -21,6 +23,7 @@ DOWN_RIGHT = (1, 1)
 DOWN_LEFT = (1, -1)
 
 DIRECTIONS = [UP, DOWN, LEFT, RIGHT]
+DIRECTIONS_V = [Vector2(d) for d in DIRECTIONS]
 DIRECTIONS_DIAG = [UP_RIGHT, UP_LEFT, DOWN_RIGHT, DOWN_LEFT]
 DIRECTIONS_NP = [np.asarray(d) for d in DIRECTIONS]
 
@@ -99,6 +102,20 @@ def coordinates_to_grid(values: Iterable[tuple[npt.ArrayLike, int]], start_shape
         grid[pt] = value
 
     return grid
+
+def grid_to_coordinates(arr: Iterable[Iterable], ignore=None):
+    pts = dict()
+    for i, line in enumerate(arr):
+        for j, c in enumerate(line):
+            if ignore is not None and c in ignore:
+                continue
+            if c in pts:
+                pts[c].add(Vector2(i, j))
+            else:
+                pts[c] = {Vector2(i, j)}
+    return pts
+
+
 
 
 def nd_range_inclusive(c1: npt.ArrayLike | None, c2=npt.ArrayLike | None):
