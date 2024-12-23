@@ -26,7 +26,7 @@ def match(pattern, tokens, known=None):
 
         if pattern == token:
             ct += 1
-        elif pattern[:len(token)] == token:
+        elif pattern[:(len(token))] == token:
             ct += match(pattern[len(token):], tokens, known)
 
     known[len(pattern)] = ct

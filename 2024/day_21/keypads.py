@@ -1,3 +1,5 @@
+from functools import cache
+
 from utils.aocd_solutions import Puzzle
 from utils.grid_2d import UP, LEFT
 from utils.vector import Vector2
@@ -25,6 +27,12 @@ class Keypad:
         else:
             return value
 
+    def __hash__(self):
+        return hash(repr(self.keypad))
+
+    def __eq__(self, other):
+        return other.keypad == self.keypad
+
     def __init__(self, keypad):
         self.keypad = {}
         for i, line in enumerate(keypad):
@@ -50,13 +58,17 @@ class Keypad:
         pos = self.pos(pos)
         y, x = self.path_to(pos, tgt)
 
+        if x == 0 and y == 0:
+            yield 'A'
+            return
+
         if (dy := y // UP[0]) > 0:
             s_y = 'U' * dy
         elif dy < 0:
             s_y = 'D' * -dy
         else:
             s_y = ''
-        v_corner = pos + (y, 0)
+        corner_v = pos + (y, 0)
 
         if (dx := x // LEFT[1]) > 0:
             s_x = 'L' * dx
@@ -64,42 +76,42 @@ class Keypad:
             s_x = 'R' * -dx
         else:
             s_x = ''
-        h_corner = pos + (0, x)
+        corner_h = pos + (0, x)
 
-        if dy != 0 and v_corner in self.keypad:
-            yield s_y + s_x + 'A'
-        if dx != 0 and h_corner in self.keypad:
+        if x != 0 and corner_h in self.keypad:
             yield s_x + s_y + 'A'
+        if y != 0 and corner_v in self.keypad:
+            yield s_y + s_x + 'A'
 
-
-def chain_keypads(keypads, seq: str, states: tuple):
+@cache
+def chain_keypads(keypads, seq: str):
     if not keypads:
-        yield seq, states
-        return
+        return len(seq)
 
     keypad = keypads[0]
-    pos = states[0]
+    pos = 'A'
 
+    ct = 0
     for s in seq:
-        for s2 in keypad.seq_to(pos, s):
-            results = list(chain_keypads(keypads[1:], s2, states[1:]))
-            results.sort(key=lambda r: len(r[0]))
-            result, new_states = results[0]
-            pos = s
-            states = (pos,) + new_states
-            yield result, states
+        results = (chain_keypads(keypads[1:], new_seq) for new_seq in keypad.seq_to(pos, s))
+        pos = s
+        ct += min(results)
+
+    return ct
 
 
 @puzzle.solution_a
-def solve_p1(data):
-    keypads = [Keypad(MAIN_KEYPAD)] + [Keypad(ROBOT_KEYPAD)] * 3
+def solve_p1(data, intermediate_robots=2):
+    keypads = (Keypad(MAIN_KEYPAD),) + (Keypad(ROBOT_KEYPAD),) * intermediate_robots
+    complexities = []
     for line in data.split('\n'):
-        return ''.join(s for s, _ in chain_keypads(keypads, line, ('A',) * 4))
+        complexities.append(int(line[0:3]) * chain_keypads(keypads, line))
+
+    return sum(complexities)
+
+@puzzle.solution_b
+def solve_p2(data):
+    return solve_p1(data, 25)
 
 
-rrr = solve_p1("""029A
-980A
-179A
-456A
-379A""")
-print(rrr)
+puzzle.check_solutions()
