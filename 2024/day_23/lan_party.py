@@ -5,9 +5,11 @@ from utils.aocd_solutions import Puzzle
 
 puzzle = Puzzle(2024, 23)
 
+
 def make_graph(data):
-    edges =  [tuple(line) for line in parser.find_in_line(data, r"\w+")]
+    edges = [tuple(line) for line in parser.find_in_line(data, r"\w+")]
     return Graph.TupleList(edges)
+
 
 @puzzle.solution_a
 def solve_p1(data):
@@ -18,6 +20,7 @@ def solve_p1(data):
             ct += 1
     return ct
 
+
 @puzzle.solution_b
 def solve_p2(data):
     g = make_graph(data)
@@ -25,5 +28,6 @@ def solve_p2(data):
     names = [g.vs[i]['name'] for i in clique]
     names.sort()
     return ','.join(names)
+
 
 puzzle.check_solutions()
