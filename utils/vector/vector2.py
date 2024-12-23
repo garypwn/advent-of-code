@@ -50,11 +50,23 @@ class Vector2:
         else:
             return Vector2(self[0] / other[0], self[1] / other[1])
 
+    def __rtruediv__(self, other):
+        if isinstance(other, int) or isinstance(other, float):
+            return Vector2(other / self[0], other / self[1])
+        else:
+            return Vector2(other / self[0], other / self[1])
+
     def __floordiv__(self, other):
         if isinstance(other, int) or isinstance(other, float):
             return Vector2(self[0] // other, self[1] // other)
         else:
             return Vector2(self[0] // other[0], self[1] // other[1])
+
+    def __rfloordiv__(self, other):
+        if isinstance(other, int) or isinstance(other, float):
+            return Vector2(other // self[0], other // self[1])
+        else:
+            return Vector2(other // self[0], other // self[1])
 
     def __floor__(self):
         return Vector2(math.floor(self[0]), math.floor(self[1]))
