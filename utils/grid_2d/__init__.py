@@ -86,7 +86,7 @@ def shape(arr: list) -> tuple:
     return s
 
 
-def chararray(lines: Iterable[str]) -> np.chararray:
+def chararray(lines: Iterable[str]) -> np.char.chararray:
     """Transforms lines of text into a 2-dimensional array of single character strings"""
     return np.char.asarray([[s for s in line.strip()] for line in lines], itemsize=1)
 
@@ -103,7 +103,10 @@ def coordinates_to_grid(values: Iterable[tuple[npt.ArrayLike, int]], start_shape
 
     return grid
 
+
 def grid_to_coordinates(arr: Iterable[Iterable], ignore=None):
+    """Given a 2d grid, creates a dict of {val: [pts]} that maps unique tokens to lists of points where they occur.
+    Specifying a list of tokens to ignore can be helpful for ignoring 'background' tokens."""
     pts = dict()
     for i, line in enumerate(arr):
         for j, c in enumerate(line):
@@ -114,8 +117,6 @@ def grid_to_coordinates(arr: Iterable[Iterable], ignore=None):
             else:
                 pts[c] = {Vector2(i, j)}
     return pts
-
-
 
 
 def nd_range_inclusive(c1: npt.ArrayLike | None, c2=npt.ArrayLike | None):
@@ -140,7 +141,7 @@ def nd_range_inclusive(c1: npt.ArrayLike | None, c2=npt.ArrayLike | None):
 
 
 def diag_range(stop_1, stop_2):
-    """Yields lists of indices representing diagonal rows in a grid"""
+    """Yields lists of indices representing diagonal rows in a grid."""
     for i in range(stop_1):
         yield zip(range(i, -1, -1), range(0, min(i + 1, stop_2)))
     for i in range(1, stop_2):
@@ -157,4 +158,3 @@ def diag_enumerate(arr):
     """Yields diagonal rows of a grid with indices"""
     for row in diag_range(len(arr), len(arr[0])):
         yield (((i, j), arr[i][j]) for i, j in row)
-
