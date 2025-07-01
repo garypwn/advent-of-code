@@ -1,21 +1,30 @@
 # AoC 2022
 
 This is the first backlog year (from before I started participating in events) that I tackled.
-I did some puzzles in November 2024 as a warmup for the 2024 event, and then some more in summer 2025 for fun.
+I did some puzzles as a warmup in the November preceding the 2024 event,
+and then I did some more in summer 2025 for fun.
 
 ## Journal
 
+Here are my post-puzzle thoughts and opinions. I like to try answer the following questions:
+
+- What is my opinion on the puzzle?
+- How did I feel about my process for solving the puzzle?
+- Am I satisfied with my solution?
+
 ### Days 1-14
 
-I did these before I started keeping journal entries for puzzles.
+I solved these puzzles before I started keeping journal entries.
 
 ### [Day 15](day_15) - Beacons
+
 _Solved Jun. 30, 2025_
 
 We're looking for a beacon. We have some points,
 and each one has an exclusion zone around it with a given manhattan distance.
 
 #### Part 1
+
 I took my new RangeSet utility for a spin, and it worked great!
 Each beacon adds an interval of excluded points in the target row,
 then I just take len(points) for the answer.
@@ -59,4 +68,38 @@ All told, it works in O(N^3).
 **Possible Bug:** Remember how I said the solution could be sandwiched against the arena boundary? Yeah,
 I didn't bother checking it. Once I got the main sandwich logic working, I tried it on my input and
 immediately got a correct solution. Depending on how puzzle inputs are generated, my solution might
-fail. **Todo: add logic to fix this.**
+fail.
+
+**Update:** I handled the case of the solution being sandwiched into the corners or the edge.
+It only runs if no normal sandwiches are found. It's also O(n^3) and in theory about as fast
+as the typical case. It about doubled the amount of code for the part 2 solution, and I needed
+two custom test cases to verify it worked.
+
+#### Opinions
+
+Conceptually, I think this puzzle was cool. Once the key observation for part 2 clicked, I knew
+exactly what I needed to do, which was satisfying. The problem was that actually implementing it was
+tedious. I am happy with my solution—it's fast (for python) and it's clean enough. Wrangling the
+boundary directions without excessive code duplication wasn't too bad, but it's not very human-readable:
+
+```python   
+for slope, ss in zip((1, -1), intercepts):
+    for d, s in zip((1, -1), ss):
+        b = sy + d * dist - slope * sx  # the intercept
+        s.add(b)
+```
+
+But it was annoying that handling the edge cases took so much code.
+
+This is the sort of problem that would be a lot prettier described with pure math as opposed to
+computer code. I'd been holding out on using an algebra solver for my AoC solutions, but I think
+this solution would be much nicer and just as fast using Z3.
+
+I think understanding the algebra is an important part of solving problems like this, and using
+Z3 when you don't understand what's going on is against the spirit of the puzzle. But finding the
+intersection of lines in the plane is baby-level shit, especially when those lines only ever have
+slopes of 1 and -1.
+
+Plus, learning how to use Z3 is far more valuable to me in terms of advancing my skills than
+practicing ninth grade math. Using new tools is a good thing. If I wanted to be a purist, I'd
+solve these puzzles in x86 assembly.
