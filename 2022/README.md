@@ -103,3 +103,34 @@ slopes of 1 and -1.
 Plus, learning how to use Z3 is far more valuable to me in terms of advancing my skills than
 practicing ninth grade math. Using new tools is a good thing. If I wanted to be a purist, I'd
 solve these puzzles in x86 assembly.
+
+### [Day 16](day_16) - Pressure
+
+You have some valves. You have 30 minutes to open the vales in the order that releases the most
+pressure. It takes 1 minute to open a valve, and one minute to move to an adjacent location.
+
+For this puzzle, I decided to switch from using igraph, which I'd been using from previous puzzles,
+to NetworkX. I was seduced by the ability to directly index into a NetworkX graph, and how
+well integrated naming and attaching objects to nodes and edges was.
+
+#### Part 1
+
+I was happy to see a graph problem that wasn't just another flavor of the Implement Dijkstra Again
+puzzle. I had the great idea to turn the unweighted undirected graph given by the puzzle input into
+a weighted complete graph (well, mostly complete. The starting valve AA only has outgoing edges).
+This graph's weights would represent the amount of time it would take to travel to a valve (using the
+shortest path) and open it. This allowed me to cull all the valves with zero pressure, reducing the size
+of the network from 57 to 16, and essentially precompute all the pathfinding.
+
+I spent a lot of time mulling over how to make this problem take anything but exponential time.
+Ultimately it was not worth it. My solution is still exponential. But it's a much better kind of
+exponential.
+
+Using my condensed weighted network, I basically do DFS on all the possible paths, looking for the
+highest output possible in 30 minutes. For each state (representing my current position and the
+set of valves I've opened so far) I store all the pareto efficient ways I've reached it, in terms
+of my output so far and the amount of the 30 minutes remaining, I don't bother exploring further.
+
+Finally, once the solution was working, I noticed I was spending a lot of time indexing into my
+graph, and a lot of time turning lists of edges into frozenset objects. So I just slapped on
+@cache, took my 4x speedup, and called it a day. 
