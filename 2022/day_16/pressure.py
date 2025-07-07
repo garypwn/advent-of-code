@@ -1,4 +1,5 @@
 from functools import cache
+from itertools import combinations, repeat, chain
 
 import networkx as nx
 
@@ -32,69 +33,85 @@ def create_relaxed_graph(data):
     return gw
 
 
-def exhaustive_search(g, total_time, trace_path=False):
-    # Exhaustively searches all paths, but culls attempts that reach a state in a way that isn't pareto efficient.
+class Search:
 
-    # Maps 2^16 states to their respective pareto fronts, stored as dicts of {t_rem: value}
-    # Each pareto front's size is at most t/2, since the min edge weight is 2 minutes, and all are integers.
-    pareto_fronts = dict()
+    def __init__(self, g, heuristic_time_step=None):
+        self.g = g
+        self.pressures = {n: self.g.nodes.data()[n]['pressure'] for n in self.g.nodes.keys()}
+        self.time_step_iter = heuristic_time_step if heuristic_time_step else lambda t: range(t - 2, 0, -2)
+
+    initial_position = 'AA', 0
 
     @cache
-    def value_func(t_rem, curr, tgt):
+    def get_edges(self, curr):
+        return self.g[curr].keys()
+
+    @cache
+    def value_func(self, t_rem, curr, tgt):
         # The pressure*time total output from visiting a node and opening the valve
-        t = max(0, t_rem - g[curr][tgt]['weight'])
-        return t * g.nodes.data()[tgt]['pressure'], t
+        dt = self.g[curr][tgt]['weight']
+        t = max(0, t_rem - dt)
+        return t * self.g.nodes.data()[tgt]['pressure'], dt
 
     @cache
-    def get_edges(node):
-        return frozenset(g[node].keys())
+    def upper_bound(self, unseen, time):
+        # Gets the upper bound on the best value of a sub-problem
+        # Assumes all edges for the whole graph are w=2 and quickly sums over all unseen
+        pressures = sorted([self.pressures[n] for n in unseen], reverse=True)
+        return sum(p * t for p, t in zip(pressures, self.time_step_iter(time)))
 
-    def pareto_efficient(state, val, t):
-        # Check and update pareto dict
-        if state not in pareto_fronts:
-            pareto_fronts[state] = {t: val}
-            return True
+    @cache
+    def best_first_search(self, curr, unseen, time):
+        # DFS but it greedily picks the best option first (in terms of value gained / time cost)
 
-        front = pareto_fronts[state]
-        for i in range(total_time, t - 1, -1):
-            if i in front:
-                if val <= front[i]:
-                    return False
-        front[t] = val
-        return True
+        if not unseen or time < 2:
+            return 0
 
-    def dfs(state, val, t_rem):
-
-        curr, unseen = state
-        if t_rem <= 0:
-            return (val, [curr]) if trace_path else (val, None)
-
-        best_val = val
-
-        best_path = None
-        for dest in get_edges(curr) & unseen:
-            v, new_t = value_func(t_rem, curr, dest)
-            if v <= 0:
+        lower_bound = 0
+        targets = sorted([(n, self.value_func(time, curr, n)) for n in unseen & self.get_edges(curr)],
+                         key=lambda t: t[1][0] / t[1][1], reverse=True)
+        for tgt, (val, dt) in targets:
+            new_unseen = unseen - {tgt}
+            if val + self.upper_bound(new_unseen, time - dt) <= lower_bound:
                 continue
-            new_val = val + v
-            new_state = dest, unseen - {dest}
-            if pareto_efficient(new_state, new_val, new_t):
-                result, path = dfs(new_state, new_val, new_t)
-                if result > best_val:
-                    best_path = path
-                    best_val = result
+            result = val + self.best_first_search(tgt, new_unseen, time - dt)
+            lower_bound = max(result, lower_bound)
 
-        if trace_path:
-            return best_val, ([curr] + best_path) if best_path is not None else [curr]
-        return best_val, None
+        return lower_bound
 
-    return dfs(('AA', frozenset(g['AA'].keys())), 0, total_time)
+    def __call__(self, total_time, num_agents=1):
+        nodes = frozenset(self.g['AA'].keys())
+        if num_agents == 1:
+            return self.best_first_search('AA', nodes, total_time)
+        elif num_agents == 2:
+
+            best_val = 0
+            for p in combinations(nodes, len(nodes) // 2):
+                p = frozenset(p)
+                result = sum(self.best_first_search('AA', s, total_time) for s in (p, nodes - p))
+                best_val = max(result, best_val)
+            return best_val
+
+
+def time_step_heuristic(t):
+    it = chain(repeat(4, 2), repeat(5, 1), repeat(10))
+    t -= 2
+    while t > 0:
+        yield t
+        t -= next(it)
 
 
 @puzzle.solution_a
 def solve_p1(data):
     g = create_relaxed_graph(data)
-    result, path = exhaustive_search(g, 30)
+    result = Search(g, time_step_heuristic)(30, 1)
+    return result
+
+
+@puzzle.solution_b
+def solve_p2(data):
+    g = create_relaxed_graph(data)
+    result = Search(g, time_step_heuristic)(26, 2)
     return result
 
 
