@@ -4,6 +4,7 @@ from itertools import combinations, repeat, chain
 import networkx as nx
 
 from utils.aocd_solutions import Puzzle
+from utils.bitmask import BitmaskSet
 from utils.parser import groups
 
 puzzle = Puzzle(2022, 16)
@@ -39,12 +40,13 @@ class Search:
         self.g = g
         self.pressures = {n: self.g.nodes.data()[n]['pressure'] for n in self.g.nodes.keys()}
         self.time_step_iter = heuristic_time_step if heuristic_time_step else lambda t: range(t - 2, 0, -2)
+        self.NodeSet = BitmaskSet(self.g['AA'].keys())
 
     initial_position = 'AA', 0
 
     @cache
     def get_edges(self, curr):
-        return self.g[curr].keys()
+        return self.NodeSet(self.g[curr].keys())
 
     @cache
     def value_func(self, t_rem, curr, tgt):
@@ -71,7 +73,7 @@ class Search:
         targets = sorted([(n, self.value_func(time, curr, n)) for n in unseen & self.get_edges(curr)],
                          key=lambda t: t[1][0] / t[1][1], reverse=True)
         for tgt, (val, dt) in targets:
-            new_unseen = unseen - {tgt}
+            new_unseen = unseen / tgt
             if val + self.upper_bound(new_unseen, time - dt) <= lower_bound:
                 continue
             result = val + self.best_first_search(tgt, new_unseen, time - dt)
@@ -80,15 +82,16 @@ class Search:
         return lower_bound
 
     def __call__(self, total_time, num_agents=1):
-        nodes = frozenset(self.g['AA'].keys())
+
+        nodes = self.NodeSet.all()
         if num_agents == 1:
             return self.best_first_search('AA', nodes, total_time)
         elif num_agents == 2:
 
             best_val = 0
             for p in combinations(nodes, len(nodes) // 2):
-                p = frozenset(p)
-                result = sum(self.best_first_search('AA', s, total_time) for s in (p, nodes - p))
+                p = self.NodeSet(p)
+                result = sum(self.best_first_search('AA', s, total_time) for s in (p, ~p))
                 best_val = max(result, best_val)
             return best_val
 
