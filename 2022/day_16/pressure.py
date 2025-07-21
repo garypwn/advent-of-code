@@ -1,5 +1,5 @@
 from functools import cache
-from itertools import combinations, repeat, chain
+from itertools import repeat, chain
 
 import networkx as nx
 
@@ -81,6 +81,17 @@ class Search:
 
         return lower_bound
 
+    def dfs(self, curr, unseen, time):
+        if not unseen or time < 2:
+            yield 0, ~unseen
+            return
+
+        for tgt in unseen & self.get_edges(curr):
+            val, dt = self.value_func(time, curr, tgt)
+            new_unseen = unseen / tgt
+            yield val, ~new_unseen
+            yield from ((val + v, n) for v, n in self.dfs(tgt, new_unseen, time - dt))
+
     def __call__(self, total_time, num_agents=1):
 
         nodes = self.NodeSet.all()
@@ -88,11 +99,25 @@ class Search:
             return self.best_first_search('AA', nodes, total_time)
         elif num_agents == 2:
 
+            paths = dict()
+            for val, visited in self.dfs('AA', nodes, total_time):
+                if visited in paths:
+                    paths[visited] = max(paths[visited], val)
+                else:
+                    paths[visited] = val
+
+            paths = sorted(paths.items(), key=lambda v: -v[1])
+
             best_val = 0
-            for p in combinations(nodes, len(nodes) // 2):
-                p = self.NodeSet(p)
-                result = sum(self.best_first_search('AA', s, total_time) for s in (p, ~p))
-                best_val = max(result, best_val)
+            for i, (v1, r1) in enumerate(paths):
+                if r1 < paths[0][1] / 1.5:
+                    break
+                for v2, r2 in paths[i + 1:]:
+                    if not v1 & v2:
+                        if r1 + r2 <= best_val:
+                            break
+                        best_val = max(best_val, r1 + r2)
+
             return best_val
 
 

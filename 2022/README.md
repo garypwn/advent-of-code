@@ -106,7 +106,7 @@ solve these puzzles in x86 assembly.
 
 ### [Day 16](day_16) - Pressure
 
-You have some valves. You have 30 minutes to open the vales in the order that releases the most
+You have some valves. You have 30 minutes to open the valves in the order that releases the most
 pressure. It takes 1 minute to open a valve, and one minute to move to an adjacent location.
 
 For this puzzle, I decided to switch from using igraph, which I'd been using from previous puzzles,
@@ -133,4 +133,36 @@ of my output so far and the amount of the 30 minutes remaining, I don't bother e
 
 Finally, once the solution was working, I noticed I was spending a lot of time indexing into my
 graph, and a lot of time turning lists of edges into frozenset objects. So I just slapped on
-@cache, took my 4x speedup, and called it a day. 
+@cache, took my 4x speedup, and called it a day.
+
+#### Part 2
+
+Oh boy. I had about six versions of this solution and none were fast enough for me.
+First, I tried adapting my p1 solution to work with the extra agent. Unfortunately, the pareto
+front gains an extra dimension for each agent added, and state space gains two dimensions.
+The resulting solution would have needed dozens of GB of memory to work.
+
+My second attempt was a dynamic programming based solution, and it worked. I rewrote my p1 solution
+to use it as well, and it was faster. It does a sort of dfs, but at each step, it estimates the
+upper bound for what the best value from the best path could be, and if that upper bound is worse
+than what we've already seen for that state, it culls that branch.
+
+This solution worked, but it took like 8 seconds. At this point I checked the subreddit and
+saw a user claiming to have a solution _in python_ that took 0.8 seconds.This is where my descent
+into insanity began.
+
+I tried replacing the sets that I was using to represent visited node sets with
+bitmasks. I whipped up a class that abstracted bitmasks behind something that behaved
+like a set. It didn't give a significant speedup, I think because of all the extra stack frames
+involved with the abstraction. Though I expect it to be useful for future problems with a bigger
+state space.
+
+So I finally dove into the solution of mister 0.8 seconds. This solution uses dfs to exhaustively
+check every path that an agent could take. I copy-pasted it and it took way more than 0.8s. Maybe
+if I ran it on my gaming system using pypy I could get those kinds of numbers.
+
+It takes all path-value pairs, sorts them, and then iterates over non-overlapping pairs of
+paths that the agents could independently take looking for the best. It has a couple of stop early
+conditions to speed things up.
+
+Overall, there's still some improvements that could be made, but I'm satisfied with this solution.

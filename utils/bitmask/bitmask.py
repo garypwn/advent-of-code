@@ -144,13 +144,3 @@ class BitmaskSet(type):
         c = super().__new__(cls, class_name, class_supers, class_attr)
 
         return c
-
-
-def test():
-    c = BitmaskSet([1, 2, 3, 4, 5, 6])
-    c1, c2 = c(1, 2, 3), c(3, 4, 5)
-    print(c1 & c2)
-    set()
-
-
-test()
