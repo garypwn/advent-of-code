@@ -166,3 +166,41 @@ paths that the agents could independently take looking for the best. It has a co
 conditions to speed things up.
 
 Overall, there's still some improvements that could be made, but I'm satisfied with this solution.
+
+### [Day 17](day_17) - Tetris
+
+This is a falling block puzzle, like the game Tetris. The puzzle input is a sequence of left/right
+wind directions that will nudge the falling rocks. The objective is to figure out how tall the tower
+will get after some number of rocks have fallen.
+
+#### Part 1
+
+We only need to drop 2022 rocks, so this was really just a matter of implementing the tetris game.
+I chose to represent the grid using a set of (x,y) points instead of a 2d array. I think this approach
+is better for the majority of Advent of Code puzzles that work on a 2d grid.
+
+#### Part 2
+
+For part 2, we need to drop 1 trillion rocks, so it's obviously not going to be feasible to simulate
+them all. This is a fairly common Advent of Code part 2, and the solution usually involves finding a
+cycle or pattern of some sort.
+
+Since this sort of thing has shown up in AoC a few times, I decided to make a generic cycle finder
+utility. The cycle finder is pretty simple. You send it values, and when it finds a pattern it will
+give you a Cycle object that you can index or sum however you please.
+
+The implementation checks for a cycle every time you send it a value, and checking for a cycle is
+at worst O(N^2) if you have a bunch of very similar patterns that don't quite repeat. So yeah, for
+something like this where finding a cycle involves dropping 2000 rocks or so, it's slow as hell.
+For this puzzle I passed in the difference between the new height and the old height of the tower
+each time I dropped a rock. It took like 8 seconds.
+
+So I expanded the cycle checker so that in addition to passing in a value, you can pass it some
+extra context, which I called a "state." A state doesn't necessarily need to be the actual puzzle
+state, which could be huge. It just has to be something unique enough that if it shows up three times
+then it guarantees you've found a cycle.
+
+For this puzzle, the state that I passed to the cycle checker was the id of the shape that was just
+dropped, the relative height of each of the 7 columns before and after the rock was dropped, and the
+next three upcoming gusts of wind. I tried using less information, but it caused false positives which
+slowed down the cycle checker. In the end, it took 170ms. Much better.
