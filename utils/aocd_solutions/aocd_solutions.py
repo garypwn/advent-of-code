@@ -110,7 +110,7 @@ class Puzzle(aocd.models.Puzzle):
             for p, f, a in zip('AB', self._solution_funcs, (example.answer_a, example.answer_b)):
                 if f:
                     result, s = self._get_result(f, example.input_data, args, kwargs, f"example{p}")
-                    success = "Pass." if str(result) == a else f"Fail. Result: {result} (expected {a}.)"
+                    success = "Pass." if str(result) == a else f"Fail. Result: {result} (expected {a})"
                     print(_format_output(f"Example {i + 1}{p} {success}", s))
 
             if example.extra:

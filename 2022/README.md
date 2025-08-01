@@ -204,3 +204,42 @@ For this puzzle, the state that I passed to the cycle checker was the id of the 
 dropped, the relative height of each of the 7 columns before and after the rock was dropped, and the
 next three upcoming gusts of wind. I tried using less information, but it caused false positives which
 slowed down the cycle checker. In the end, it took 170ms. Much better.
+
+### [Day 18](day_18) - Cubes
+
+There is a mass of cubes and we need to find the surface area.
+
+#### Part 1
+
+Each cube has six faces, and it's easy enough to iterate over them all.
+I kept track of how many times each face showed up as I iterated over the cubes. Faces that showed up
+more than once must be from cubes that are touching each other. Faces that showed up exactly once are
+part of a surface.
+
+#### Part 2
+
+Now we need to exclude faces that are part of "bubbles." I modified my part 1 solution to record the
+direction of each face. Faces are stored as (cube, cube) pairs, such that cube[0] is in the mass of
+cubes and cube[1] is not.
+
+Then I shoved all the faces into a NetworkX graph. Two nodes have an edge if their corresponding faces
+are adjacent to each other. I realized that if two cubes were diagonal to each other, they would have two pairs of
+adjacent faces that might not be parts of the same surface. So, I gave priority to adjacent faces with the
+lowest angle between them.
+
+Then, after constructing my graph, I just use `nx.connected_components` to list all the contiguous surfaces.
+Then I made the assumption that the surface with the highest area was the correct solution, which worked for
+my input.
+
+In retrospect, about 42% of my faces were in a bubble, comparing my part 1 and part 2 solutions, so it's
+possible I just got lucky and my solution might not work for some puzzle inputs.
+
+Anyhow, after comparing my solution with those on the subreddit, I found out that all that hard work I did
+could be easily done with NetworkX is like 5 lines of code. You can use `nx.grid_graph` to make a graph
+of the "world", then you can remove all the cubes listed in the puzzle input to get a graph representing
+all the voids. Then you can use `nx.connected_components` to isolate a surface, and you can even pass in
+a point outside the playing field to ensure that you don't get a surface inside the bubble. Then you can
+just use `nx.edge_boundary` to figure out how many faces are in the surface.
+
+So what did I learn? I need to spend more time looking at the docs. I really should have known that
+NetworkX can just solve the entire puzzle for me.
