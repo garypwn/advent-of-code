@@ -1,4 +1,3 @@
-import itertools
 import os
 from cProfile import Profile
 from time import time
@@ -40,21 +39,58 @@ class FuncWrapper:
 
 class Puzzle(aocd.models.Puzzle):
     _solution_funcs: list[Callable[[str], int | str]] = [None, None]
-    profile = False
+    profile_solutions = False
 
-    # Set the part 1 solution function
     def solution_a(self, *args, **kwargs):
+        """
+        Set the part 1 solution function.
+        The solution function's first argument must be the puzzle's input data.
+        The function may have extra arguments, and their values may be passed to the function
+        as ``kwargs`` either when decorating the function or when calling
+        ``Puzzle.check_examples`` or ``Puzzle.check_solutions``.
+
+        Usage::
+
+            @my_puzzle.solution_a
+            def solve_the_thing(data):
+                return answer
+
+            @my_puzzle.solution_a(puzzle_param=100)
+            def solve_the_thing(data, puzzle_param):
+                return answer
+
+        :param args: Arguments that will be passed to the solution function.
+        :param kwargs: Keyword arguments that will be passed to the solution function.
+        """
         return self._set_solution(0, args, kwargs)
 
-    # Set the part 2 solution function
     def solution_b(self, *args, **kwargs):
+        """
+        Set the part 2 solution function.
+        The solution function's first argument must be the puzzle's input data.
+        The function may have extra arguments, and their values may be passed to the function
+        as ``kwargs`` either when decorating the function or when calling
+        ``Puzzle.check_examples`` or ``Puzzle.check_solutions``.
+
+        Usage::
+
+            @my_puzzle.solution_b
+            def solve_the_thing(data):
+                return answer
+
+            @my_puzzle.solution_b(puzzle_param=100)
+            def solve_the_thing(data, puzzle_param):
+                return answer
+
+        :param args: Arguments that will be passed to the solution function.
+        :param kwargs: Keyword arguments that will be passed to the solution function.
+        """
         return self._set_solution(1, args, kwargs)
 
     def _set_solution(self, idx, args, kwargs):
         if len(args) == 1 and len(kwargs) == 0 and isinstance(args[0], Callable):
             self._solution_funcs[idx] = args[0]
             return args[0]
-
 
         def wrapper(func):
             w = FuncWrapper(func, *args, **kwargs)
@@ -63,20 +99,30 @@ class Puzzle(aocd.models.Puzzle):
 
         return wrapper
 
-    # Check the solution(s) against the listed examples
     def check_examples(self, *args, **kwargs):
-
+        """
+        Compute the puzzle solutions using the functions specified by ``Puzzle.solution_a`` and ``Puzzle.solution_b``
+        using the example input data, then check them against the examples' known solutions.
+        :param args: Additional arguments that will be passed to the solution function.
+        :param kwargs: Additional keyword arguments that will be passed to the solution function.
+        """
         for i, example in enumerate(self.examples):
             for p, f, a in zip('AB', self._solution_funcs, (example.answer_a, example.answer_b)):
-                result, s = self._get_result(f, example.input_data, args, kwargs, f"example{p}")
-                success = "Pass." if str(result) == a else f"Fail. Result: {result} (expected {a}.)"
-                print(_format_output(f"Example {i+1}{p} {success}", s))
+                if f:
+                    result, s = self._get_result(f, example.input_data, args, kwargs, f"example{p}")
+                    success = "Pass." if str(result) == a else f"Fail. Result: {result} (expected {a}.)"
+                    print(_format_output(f"Example {i + 1}{p} {success}", s))
 
             if example.extra:
                 print(f"Note: {example.extra}\n")
 
-    # Submit answers
     def check_solutions(self, *args, **kwargs):
+        """
+        Compute the puzzle solutions using the functions specified by ``Puzzle.solution_a`` and ``Puzzle.solution_b``
+        using your puzzle input, then send the results to be checked by the server.
+        :param args: Additional arguments that will be passed to the solution function.
+        :param kwargs: Additional keyword arguments that will be passed to the solution function.
+        """
         for p, f in zip("AB", self._solution_funcs):
             if f:
                 result, s = self._get_result(f, self.input_data, args, kwargs, f"solution_{p}")
@@ -86,10 +132,9 @@ class Puzzle(aocd.models.Puzzle):
                 else:
                     self.answer_b = result
 
-
     def _get_result(self, f, data, args, kwargs, context):
         wrapped = FuncWrapper(f, *args, **kwargs)
-        if self.profile:
+        if self.profile_solutions:
             pr = Profile()
             pr.enable()
         else:
@@ -102,6 +147,7 @@ class Puzzle(aocd.models.Puzzle):
             pr.dump_stats(f"{context}.prof")
 
         return result, f"(t={t_end - t_start}s)"
+
 
 def _format_output(r, t):
     return f"{r:<60}{t:>20}"

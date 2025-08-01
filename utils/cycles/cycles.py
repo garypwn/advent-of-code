@@ -1,6 +1,15 @@
-class Cycle:
+from collections.abc import Sequence
 
-    def __init__(self, offset, cyc):
+
+class Cycle[T]:
+    """An infinite length sequence of values that contains a repeating pattern"""
+
+    def __init__(self, offset: Sequence[T], cyc: Sequence[T]):
+        """
+        New infinite sequence with a repeating pattern
+        :param offset: The initial non-cycling portion of the pattern
+        :param cyc: The cycling portion of the pattern
+        """
         self.cyc = cyc
         self._csum = sum(cyc)
         self.offset = offset
@@ -18,7 +27,12 @@ class Cycle:
             for item in self.cyc:
                 yield item
 
-    def accumulate(self, stop):
+    def accumulate(self, stop: int) -> T:
+        """
+        Sum values in the cycle up to a given stopping point.
+        :param stop: The stopping point
+        :return: The sum of values in the range
+        """
         if stop < len(self.offset):
             return sum(self.offset[:stop])
 
@@ -32,13 +46,30 @@ class Cycle:
 
 
 class CycleFinder:
+    """Finds a repeating pattern in a sequence of values"""
+
     def __init__(self, min_len=2):
+        """
+        New CycleFinder. Low min_length may result in false positives.
+        :param min_len: The minimum length of cycle to consider.
+        """
         self._min_len = min_len
         self.values = []
         self.states = dict()
         self.cycle = None
 
     def send(self, item, state=None):
+        """
+        Send a value and optional state to the cycle checker. Optionally, a state can be included to add context
+        to the value.
+
+        The cycle checker will check if there is a repeating sequence at the end of the sequence of inputted values.
+        This check will occur each time a value is added (which may be slow.) If a state is included, it will instead
+        only perform the check if the given state has occurred twice before.
+        :param item: The value to search for patterns in.
+        :param state: Hashable context such that if a given state appears twice it is guaranteed to be part of a cycle.
+        :return: A Cycle object if a cycle is found, or else None.
+        """
         cyc = self._check_cycle(state)
         self.values.append(item)
         return cyc
@@ -67,7 +98,11 @@ class CycleFinder:
             self.cycle = self.search_from_end()
             return self.cycle
 
-    def search_from_end(self):
+    def search_from_end(self) -> Cycle | None:
+        """
+        Check if there is a repeating sequence at the end of the sequence of values inputted into the CycleFinder.
+        :return: A Cycle object if a cycle is found, or else None.
+        """
         for i in range(self._min_len, len(self.values) + 1):
             if self.values[-i] == self.values[-1]:
                 if self.values[-i + 1:] == self.values[-2 * i + 2:-i + 1]:
